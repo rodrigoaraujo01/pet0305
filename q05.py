@@ -12,21 +12,28 @@ class NeuralNetwork(object):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
         self.X = X
         self.y = y
+        self.gradient_trained = False
+        self.lm_trained = False
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train
         self.y_test = y_test
     
     def train_gradient(self):
-        self.gradient = GradientDescent((2, 5, 5, 1), verbose=True, step=0.1)
-        self.gradient.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=200)
+        self.gradient = GradientDescent((2, 4, 1), verbose=True, step=0.1)
+        self.gradient.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=400)
+        self.gradient_trained = True
 
     def train_levenberg_marquardt(self):
-        self.lmnet = LevenbergMarquardt((2, 3, 1), verbose=True)
+        self.lmnet = LevenbergMarquardt((2, 4, 1), verbose=True)
         self.lmnet.train(self.X_train, self.y_train, self.X_test, self.y_test)
+        self.lm_trained = True
 
-    def plot_errors(self):
+    def plot_gradient_errors(self):
         plots.error_plot(self.gradient)
+
+    def plot_lm_errors(self):
+        plots.error_plot(self.lmnet)
 
     def plot_func(self, y_func):
         fig = plt.figure()
@@ -36,18 +43,23 @@ class NeuralNetwork(object):
         X1, X2 = np.meshgrid(X1, X2)
         y_func_vec = np.vectorize(y_func)
         y = y_func_vec(X1, X2)
-        print(X1.shape, X2.shape, y.shape)
-        # ax.plot_surface(X1, X2, y, cmap=cm.viridis)
         ax.plot_wireframe(X1, X2, y)
-        # plt.show()
-        X1a = np.reshape(X1, (1, -1))[0]
-        X2a = np.reshape(X2, (1, -1))[0]
-        Xa = np.array([(i,j) for (i,j) in zip(X1a, X2a)])
-        y = self.gradient.predict(Xa)
-        X1a = np.reshape(X1a, (100, 100))
-        X2a = np.reshape(X2a, (100, 100))
-        y = np.reshape(y, (100, 100))
-        ax.plot_wireframe(X1a, X2a, y)
+
+        X1 = np.reshape(X1, (1, -1))[0]
+        X2 = np.reshape(X2, (1, -1))[0]
+        X = np.array([(i, j) for (i, j) in zip(X1, X2)])
+        if self.gradient_trained:
+            y1 = self.gradient.predict(X)
+        if self.lm_trained:
+            y2 = self.lmnet.predict(X)
+        X1 = np.reshape(X1, (100, 100))
+        X2 = np.reshape(X2, (100, 100))
+        if self.gradient_trained:
+            y1 = np.reshape(y1, (100, 100))
+            ax.plot_wireframe(X1, X2, y1)
+        if self.lm_trained:
+            y2 = np.reshape(y2, (100, 100))
+            ax.plot_wireframe(X1, X2, y2)
         plt.show()
 
 def y_func_b(a, b):
@@ -71,7 +83,7 @@ def y_func_c(x1, x2):
     return factor_1 * factor_2
 
 def y_func_d(x1, x2):
-    return 0.5*x1 + 0.5*x2
+    return (0.5*x1 + 0.5*x2)**2
 
 def generate_input_a():
     X = np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], 
@@ -119,8 +131,10 @@ def main():
     # function d
     X, y = generate_input_d()
     nn = NeuralNetwork(X, y)
-    nn.train_gradient()
-    nn.plot_errors()
+    # nn.train_gradient()
+    # nn.plot_gradient_errors()
+    nn.train_levenberg_marquardt()
+    nn.plot_lm_errors()
     nn.plot_func(y_func_d)
     # nn.train_levenberg_marquardt()
 
