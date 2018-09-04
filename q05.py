@@ -8,8 +8,14 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class NeuralNetwork(object):
-    def __init__(self, X, y):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    def __init__(self, X, y, question_a=False):
+        if not question_a:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+        else:
+            X_train = X
+            X_test = X
+            y_train = y
+            y_test = y
         self.X = X
         self.y = y
         self.gradient_trained = False
@@ -19,14 +25,14 @@ class NeuralNetwork(object):
         self.y_train = y_train
         self.y_test = y_test
     
-    def train_gradient(self):
-        self.gradient = GradientDescent((2, 4, 1), verbose=True, step=0.1)
-        self.gradient.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=400)
+    def train_gradient(self, epochs, shape):
+        self.gradient = GradientDescent(shape, verbose=True)
+        self.gradient.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=epochs)
         self.gradient_trained = True
 
-    def train_levenberg_marquardt(self):
-        self.lmnet = LevenbergMarquardt((2, 4, 1), verbose=True)
-        self.lmnet.train(self.X_train, self.y_train, self.X_test, self.y_test)
+    def train_levenberg_marquardt(self, epochs, shape):
+        self.lmnet = LevenbergMarquardt(shape, verbose=True)
+        self.lmnet.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=epochs)
         self.lm_trained = True
 
     def plot_gradient_errors(self):
@@ -35,15 +41,15 @@ class NeuralNetwork(object):
     def plot_lm_errors(self):
         plots.error_plot(self.lmnet)
 
-    def plot_func(self, y_func):
+    def plot_func(self, x_lims, y_func):
         fig = plt.figure()
         ax = Axes3D(fig)
-        X1 = np.linspace(-1, 1, 100)
-        X2 = np.linspace(-1, 1, 100)
+        X1 = np.linspace(x_lims[0], x_lims[1], 100)
+        X2 = np.linspace(x_lims[0], x_lims[1], 100)
         X1, X2 = np.meshgrid(X1, X2)
         y_func_vec = np.vectorize(y_func)
         y = y_func_vec(X1, X2)
-        ax.plot_wireframe(X1, X2, y)
+        ax.plot_wireframe(X1, X2, y, colors=['r'], linewidths=[1], label='Função original')
 
         X1 = np.reshape(X1, (1, -1))[0]
         X2 = np.reshape(X2, (1, -1))[0]
@@ -56,10 +62,11 @@ class NeuralNetwork(object):
         X2 = np.reshape(X2, (100, 100))
         if self.gradient_trained:
             y1 = np.reshape(y1, (100, 100))
-            ax.plot_wireframe(X1, X2, y1)
+            ax.plot_wireframe(X1, X2, y1, colors=['g'], linewidths=[1], label='Gradiente')
         if self.lm_trained:
             y2 = np.reshape(y2, (100, 100))
-            ax.plot_wireframe(X1, X2, y2)
+            ax.plot_wireframe(X1, X2, y2, linewidths=[1], label='Levenberg-Marquadt')
+        ax.legend()
         plt.show()
 
 def y_func_b(a, b):
@@ -74,69 +81,73 @@ def y_func_c(x1, x2):
     m2 = np.array([[0.5], [0.5]])
     m3 = np.array([[-0.5], [-0.5]])
     C = np.array([[1, 0], [0, 1]])
+    C_inv = np.linalg.inv(C)
     x = np.array([[x1], [x2]])
     factor_1 = 1/(2*pi)
-    parc_1 = -0.5 * (np.matrix.transpose(x-m1) @ np.linalg.inv(C) @ (x-m1))
-    parc_2 = -0.5 * (np.matrix.transpose(x-m2) @ np.linalg.inv(C) @ (x-m2))
-    parc_3 = -0.5 * (np.matrix.transpose(x-m3) @ np.linalg.inv(C) @ (x-m3))
+    parc_1 = -0.5 * ((x-m1).T @ C_inv @ (x-m1))
+    parc_2 = -0.5 * ((x-m2).T @ C_inv @ (x-m2))
+    parc_3 = -0.5 * ((x-m3).T @ C_inv @ (x-m3))
     factor_2 = np.exp(parc_1) + np.exp(parc_2) + np.exp(parc_3)
-    return factor_1 * factor_2
+    return (factor_1 * factor_2)[0][0]
 
 def y_func_d(x1, x2):
-    return (0.5*x1 + 0.5*x2)**2
+    return (0.5*x1 + 0.5*x2) ** 2
 
 def generate_input_a():
-    X = np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], 
-                  [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]])
-    y = np.array([[0], [1], [1], [0], [1], [0], [0], [1]])
+    # X1 = np.random.choice([0, 1], size=10000)
+    # X2 = np.random.choice([0, 1], size=10000)
+    # X3 = np.random.choice([0, 1], size=10000)
+    # X = np.array([[i, j, k] for (i, j, k) in zip(X1, X2, X3)])
+    # X1_X2 = np.logical_xor(X1, X2)
+    # y = np.logical_xor(X1_X2, X3)
+    X = np.array([[0,0,0], [0,0,1], [0,1,0], [0,1,1], [1,0,0], [1,0,1], [1,1,0], [1,1,1]])
+    y = np.array([[1], [0], [0], [1], [1], [0], [0], [1]])
     return X, y
 
-def generate_input_b():
-    pi = np.pi
-    X1 = np.linspace(-4*pi, 4*pi, 100)
-    X2 = np.linspace(-4*pi, 4*pi, 100)
+def generate_input(x_lims, n_samples, func):
+    X1 = np.linspace(x_lims[0], x_lims[1], n_samples)
+    X2 = np.linspace(x_lims[0], x_lims[1], n_samples)
     np.random.shuffle(X1)
     np.random.shuffle(X2)
     X = np.array([[i, j] for (i, j) in zip(X1, X2)])
-    y = np.array([y_func_b(i, j) for (i, j) in zip(X1, X2)])
-    
+    y = np.array([func(i, j) for (i, j) in X])
     return X, y
-
-def generate_input_c():
-    X1 = np.linspace(-10, 10, 100)
-    X2 = np.linspace(-10, 10, 100)
-    np.random.shuffle(X1)
-    np.random.shuffle(X2)
-    X = np.array([[i, j] for (i, j) in zip(X1, X2)])
-    y = np.array([y_func_c(i, j)[0][0] for (i, j) in zip(X1, X2)])
-    return X, y
-
-def generate_input_d():
-    X1 = np.linspace(-1, 1, 100)
-    X2 = np.linspace(-1, 1, 100)
-    np.random.shuffle(X1)
-    np.random.shuffle(X2)
-    X = np.array([[i, j] for (i, j) in zip(X1, X2)])
-    y = np.array([y_func_d(i, j) for (i, j) in zip(X1, X2)])
-    return X, y
-
 
 def main():
     # function a
-    # X, y = generate_input_a()
+    X, y = generate_input_a()
+    nn_shape = (3, 4, 1)
+
     # function b
-    # X, y = generate_input_b()
+    # x_lims = (-4*np.pi, 4*np.pi)
+    # func = y_func_b
+    # X, y = generate_input(x_lims, 1000, func)
+    # nn_shape = (2, 4, 1)
+
     # function c
-    # X, y = generate_input_c()
+    # x_lims = (-1, 1)
+    # func = y_func_c
+    # X, y = generate_input(x_lims, 1000, func)
+    # nn_shape = (2, 4, 1)
+
     # function d
-    X, y = generate_input_d()
-    nn = NeuralNetwork(X, y)
-    # nn.train_gradient()
-    # nn.plot_gradient_errors()
-    nn.train_levenberg_marquardt()
+    # x_lims = (-1, 1)
+    # func = y_func_d
+    # X, y = generate_input(x_lims, 1000, func)
+    # nn_shape = (2, 4, 1)
+
+    nn = NeuralNetwork(X, y, question_a=True)
+    nn.train_gradient(15000, nn_shape)
+    nn.plot_gradient_errors()
+    nn.train_levenberg_marquardt(100, nn_shape)
     nn.plot_lm_errors()
-    nn.plot_func(y_func_d)
-    # nn.train_levenberg_marquardt()
+    # nn.plot_func(x_lims, func)
+    
+    # test func a
+    y_grad = nn.gradient.predict(X)
+    y_lm = nn.lmnet.predict(X)
+    for i in range(8):
+        print(X[i], y[i], y_grad[i], y_lm[i])
 
 if __name__ == '__main__':
     main()
