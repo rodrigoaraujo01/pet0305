@@ -77,20 +77,25 @@ class PatternGenerator(object):
         X1 = np.linspace(-1, 1, self.n_samples)
         X2 = np.linspace(-1, 1, self.n_samples)
         xx, yy = np.meshgrid(X1, X2)
-        ax = plt.subplot(1, len(classifiers) + 1, 1)
-        # Plot the training points
-        ax.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+        ax1 = plt.subplot(2, len(classifiers) + 1, 1)
+        ax1.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+        # ax2 = plt.subplot(2, len(classifiers) + 1, len(classifiers) + 2)
+        # ax2.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
         for i, clf in enumerate(classifiers):
-            ax = plt.subplot(1, len(classifiers) + 1, i+2)
+            ax1 = plt.subplot(2, len(classifiers) + 1, i+2)
             if hasattr(clf, "decision_function"):
                 # Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
                 Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
             else:
                 Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
             Z = Z.reshape(xx.shape)
-            ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
+            ax1.contourf(xx, yy, Z, cmap=cm, alpha=.8)
             # Plot also the points
-            ax.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+            # ax1.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+
+            ax2 = plt.subplot(2, len(classifiers) + 1, i + len(classifiers) + 3)
+            X = [(x1,x2) for (x1, x2) in zip(self.X1, self.X2)]
+            ax2.scatter(self.X1, self.X2, c=clf.predict(X), cmap=cm_bright, s=1)
         plt.show()
 
 
