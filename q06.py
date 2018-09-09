@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import ListedColormap
+
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import GridSearchCV
 from sklearn import svm
-from neupy.algorithms import GradientDescent, LevenbergMarquardt
-from neupy import plots
+# from neupy.algorithms import GradientDescent, LevenbergMarquardt
+# from neupy import plots
 
 class Point(object):
     def __init__(self, x, y):
@@ -68,37 +71,27 @@ class PatternGenerator(object):
             ax.scatter3D(self.X1, self.X2, y, c=c, depthshade=False)
         plt.show()
 
-
-# class NeuralNetwork(object):
-#     def __init__(self, X, y):
-#         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-#         self.X = X
-#         self.y = y
-#         self.X_train = X_train
-#         self.X_test = X_test
-#         self.y_train = y_train
-#         self.y_test = y_test
-
-#     def train_gradient(self, epochs, shape):
-#         self.gradient = GradientDescent(shape, verbose=True)
-#         self.gradient.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=epochs)
-#         self.gradient_trained = True
-
-#     def plot_gradient_errors(self):
-#         plots.error_plot(self.gradient)
-
-#     def gradient_predict(self, X):
-#         return self.gradient.predict(X)
-
-#     def train_levenberg_marquardt(self, epochs, shape):
-#         self.lmnet = LevenbergMarquardt(shape, verbose=True)
-#         self.lmnet.train(self.X_train, self.y_train, self.X_test, self.y_test, epochs=epochs)
-
-#     def plot_lm_errors(self):
-#         plots.error_plot(self.lmnet)
-
-#     def lm_predict(self, X):
-#         return self.lmnet.predict(X)
+    def better_plot_data(self, classifiers):
+        cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        cm = plt.cm.RdBu
+        X1 = np.linspace(-1, 1, self.n_samples)
+        X2 = np.linspace(-1, 1, self.n_samples)
+        xx, yy = np.meshgrid(X1, X2)
+        ax = plt.subplot(1, len(classifiers) + 1, 1)
+        # Plot the training points
+        ax.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+        for i, clf in enumerate(classifiers):
+            ax = plt.subplot(1, len(classifiers) + 1, i+2)
+            if hasattr(clf, "decision_function"):
+                # Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+                Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+            else:
+                Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+            Z = Z.reshape(xx.shape)
+            ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
+            # Plot also the points
+            ax.scatter(self.X1, self.X2, c=self.y, cmap=cm_bright, s=1)
+        plt.show()
 
 
 class NeuralNetwork(object):
@@ -118,13 +111,34 @@ class SupportVectorMachine(object):
     def __init__(self, X, y, debug=False):
         self.X = X
         self.y = y
-        self.clf = svm.SVC()
+        self.clf = svm.SVC(kernel='rbf')
 
     def fit(self):    
         self.clf.fit(self.X, self.y)
 
     def predict(self, X):
         return self.clf.predict(X)
+    
+    def optimize(self):
+        # {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}
+        tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
+                             'C': [1, 10, 100, 1000]},
+                            {'kernel': ['linear'], 'C': [1, 10, 100]}]
+        clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
+                            scoring='recall_macro', verbose=2)
+        clf.fit(self.X, self.y)
+        print("Best parameters set found on development set:")
+        print()
+        print(clf.best_params_)
+        print()
+        print("Grid scores on development set:")
+        print()
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r"
+                % (mean, std * 2, params))
+        print()
 
 
 
@@ -140,18 +154,18 @@ def main():
     # y1 = nn.lm_predict(pg.x_values())
     # nn.plot_lm_errors()
 
+    # pg.plot_data([(y1, 'r'), (y2, 'g')])
+
     nn = NeuralNetwork(pg.x_values(), pg.y)
     nn.fit()
-    y1 = nn.predict(pg.x_values())
     if debug: print('NN trained')
 
     svm = SupportVectorMachine(pg.x_values(), pg.y)
+    # svm.optimize()
     svm.fit()
-    y2 = svm.predict(pg.x_values())
-    if debug: print('SVM trained')
-    
-    pg.plot_data([(y1, 'r'), (y2, 'g')])
+    if debug: print('SVM trained')    
 
+    pg.better_plot_data([nn.mlp, svm.clf])
 
 if __name__ == '__main__':
     main()
