@@ -94,12 +94,6 @@ def y_func_d(x1, x2):
     return (0.5*x1 + 0.5*x2) ** 2
 
 def generate_input_a():
-    # X1 = np.random.choice([0, 1], size=10000)
-    # X2 = np.random.choice([0, 1], size=10000)
-    # X3 = np.random.choice([0, 1], size=10000)
-    # X = np.array([[i, j, k] for (i, j, k) in zip(X1, X2, X3)])
-    # X1_X2 = np.logical_xor(X1, X2)
-    # y = np.logical_xor(X1_X2, X3)
     X = np.array([[0,0,0], [0,0,1], [0,1,0], [0,1,1], [1,0,0], [1,0,1], [1,1,0], [1,1,1]])
     y = np.array([[1], [0], [0], [1], [1], [0], [0], [1]])
     return X, y
