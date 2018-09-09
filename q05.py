@@ -41,7 +41,30 @@ class NeuralNetwork(object):
     def plot_lm_errors(self):
         plots.error_plot(self.lmnet)
 
-    def plot_func(self, x_lims, y_func):
+    def plot_func_scatter(self):
+        fig = plt.figure()
+        # ax = Axes3D(fig)
+        ax1 = fig.add_subplot(1, 3, 1, projection='3d')
+        ax1.set_title('Função')
+        ax2 = fig.add_subplot(1, 3, 2, projection='3d')
+        ax2.set_title('Gradiente')
+        ax3 = fig.add_subplot(1, 3, 3, projection='3d')
+        ax3.set_title('Levenberg-Marquadt')
+        X1 = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+        X2 = np.array([0, 0, 1, 1, 0, 0, 1, 1])
+        X3 = np.array([0, 1, 0, 1, 0, 1, 0, 1])
+        input_x = np.array([[a, b, c] for (a, b, c) in zip(X1, X2, X3)])
+        y = np.array([1, 0, 0, 1, 1, 0, 0, 1]) * 100
+        ax1.scatter3D(X1, X2, X3, s=y, depthshade=False)
+        if self.gradient_trained:
+            y_grad = self.gradient.predict(input_x)*100
+            ax2.scatter3D(X1, X2, X3, s=y_grad, depthshade=False)
+        if self.lm_trained:
+            y_lm = self.lmnet.predict(input_x)*100
+            ax3.scatter3D(X1, X2, X3, s=y_lm, depthshade=False)
+        plt.show()
+
+    def plot_func(self, x_lims, y_func, normalize=False, standardize=False):
         fig = plt.figure()
         ax = Axes3D(fig)
         X1 = np.linspace(x_lims[0], x_lims[1], 100)
@@ -49,6 +72,11 @@ class NeuralNetwork(object):
         X1, X2 = np.meshgrid(X1, X2)
         y_func_vec = np.vectorize(y_func)
         y = y_func_vec(X1, X2)
+        if normalize:
+            # y = 2*(y - y.min())/y.max() -1
+            y = y/y.max()
+        if standardize:
+            y = (y-y.mean())/y.std()
         ax.plot_wireframe(X1, X2, y, colors=['r'], linewidths=[1], label='Função original')
 
         X1 = np.reshape(X1, (1, -1))[0]
@@ -78,8 +106,8 @@ def y_func_b(a, b):
 def y_func_c(x1, x2):
     pi = np.pi
     m1 = np.array([[0], [0]])
-    m2 = np.array([[0.5], [0.5]])
-    m3 = np.array([[-0.5], [-0.5]])
+    m2 = np.array([[2], [2]])
+    m3 = np.array([[-2], [-2]])
     C = np.array([[1, 0], [0, 1]])
     C_inv = np.linalg.inv(C)
     x = np.array([[x1], [x2]])
@@ -98,13 +126,18 @@ def generate_input_a():
     y = np.array([[1], [0], [0], [1], [1], [0], [0], [1]])
     return X, y
 
-def generate_input(x_lims, n_samples, func):
+def generate_input(x_lims, n_samples, func, normalize=False, standardize=False):
     X1 = np.linspace(x_lims[0], x_lims[1], n_samples)
     X2 = np.linspace(x_lims[0], x_lims[1], n_samples)
     np.random.shuffle(X1)
     np.random.shuffle(X2)
     X = np.array([[i, j] for (i, j) in zip(X1, X2)])
     y = np.array([func(i, j) for (i, j) in X])
+    if normalize:
+        # y = 2*(y - y.min())/y.max() -1
+        y = y/y.max()
+    if standardize:
+        y = (y-y.mean())/y.std()
     return X, y
 
 def main():
@@ -114,14 +147,15 @@ def main():
 
     # function b
     # x_lims = (-4*np.pi, 4*np.pi)
+    # x_lims = (-1, 1)
     # func = y_func_b
     # X, y = generate_input(x_lims, 1000, func)
     # nn_shape = (2, 4, 1)
 
     # function c
-    # x_lims = (-1, 1)
+    # x_lims = (-5, 5)
     # func = y_func_c
-    # X, y = generate_input(x_lims, 1000, func)
+    # X, y = generate_input(x_lims, 1000, func, normalize=True, standardize=False)
     # nn_shape = (2, 4, 1)
 
     # function d
@@ -131,17 +165,18 @@ def main():
     # nn_shape = (2, 4, 1)
 
     nn = NeuralNetwork(X, y, question_a=True)
-    nn.train_gradient(15000, nn_shape)
+    nn.train_gradient(20000, nn_shape)  # 20.000 for a, 100.000 for b and c
     nn.plot_gradient_errors()
-    nn.train_levenberg_marquardt(100, nn_shape)
+    nn.train_levenberg_marquardt(50, nn_shape)  # 50 for a, 200 for b and c
     nn.plot_lm_errors()
-    # nn.plot_func(x_lims, func)
+    # nn.plot_func(x_lims, func, normalize=True, standardize=False)
     
     # test func a
     y_grad = nn.gradient.predict(X)
     y_lm = nn.lmnet.predict(X)
     for i in range(8):
         print(X[i], y[i], y_grad[i], y_lm[i])
+    nn.plot_func_scatter()
 
 if __name__ == '__main__':
     main()
