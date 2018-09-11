@@ -174,3 +174,12 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# Classifier comparison: http://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
+# SVC Documentation http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
+# 1.17. Neural network models (supervised) http://scikit-learn.org/stable/modules/neural_networks_supervised.html
+# MLPClassifier Documentation http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
+# GridSearch http://scikit-learn.org/stable/modules/grid_search.html#grid-search
+# GridSearchCV Documentation http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+# Parameter estimation using grid search with cross-validation http://scikit-learn.org/stable/auto_examples/model_selection/plot_grid_search_digits.html
