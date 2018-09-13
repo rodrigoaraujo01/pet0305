@@ -182,3 +182,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# References
+# https://datascience.stackexchange.com/questions/22830/deep-neural-network-using-keras-tensorflow-solves-spiral-dataset-classification
