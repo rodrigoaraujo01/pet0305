@@ -6,6 +6,7 @@ from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
 from sklearn import svm
 # from neupy.algorithms import GradientDescent, LevenbergMarquardt
 # from neupy import plots
@@ -101,29 +102,51 @@ class PatternGenerator(object):
 
 class NeuralNetwork(object):
     def __init__(self, X, y, debug=False):
-        self.X = X
-        self.y = y
-        self.mlp = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(10,), random_state=1)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.1, random_state=27)
+        self.X_train = X_train
+        self.X_test = X_test
+        self.y_train = y_train
+        self.y_test = y_test
+        self.clf = MLPClassifier(
+            solver='lbfgs', 
+            hidden_layer_sizes=(100,), 
+            random_state=1
+            )
 
     def fit(self):    
-        self.mlp.fit(self.X, self.y)
+        self.clf.fit(self.X_train, self.y_train)
+
+    def accuracy(self):
+        y_pred = self.clf.predict(self.X_test)
+        return accuracy_score(self.y_test, y_pred)
 
     def predict(self, X):
-        return self.mlp.predict(X)
+        return self.clf.predict(X)
 
 
 class SupportVectorMachine(object):
     def __init__(self, X, y, debug=False):
-        self.X = X
-        self.y = y
-        self.clf = svm.SVC(kernel='rbf')
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.1, random_state=27)
+        self.X_train = X_train
+        self.X_test = X_test
+        self.y_train = y_train
+        self.y_test = y_test
+        self.clf = svm.SVC(
+            kernel='rbf',
+            gamma=10,
+            C=1
+            )
 
     def fit(self):    
-        self.clf.fit(self.X, self.y)
+        self.clf.fit(self.X_train, self.y_train)
 
     def predict(self, X):
         return self.clf.predict(X)
-    
+
+    def accuracy(self):
+        y_pred = self.clf.predict(self.X_test)
+        return accuracy_score(self.y_test, y_pred)
+
     def optimize(self):
         # {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}
         tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
@@ -163,14 +186,18 @@ def main():
 
     nn = NeuralNetwork(pg.x_values(), pg.y)
     nn.fit()
-    if debug: print('NN trained')
+    if debug: 
+        print('NN trained')    
+        print(nn.accuracy())
 
     svm = SupportVectorMachine(pg.x_values(), pg.y)
     # svm.optimize()
     svm.fit()
-    if debug: print('SVM trained')    
+    if debug: 
+        print('SVM trained')    
+        print(svm.accuracy())
 
-    pg.better_plot_data([nn.mlp, svm.clf])
+    pg.better_plot_data([nn.clf, svm.clf])
 
 if __name__ == '__main__':
     main()
