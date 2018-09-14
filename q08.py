@@ -12,12 +12,6 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 from sklearn import svm
-
-# print('Importing Keras')
-# from keras.models import Sequential
-# from keras.layers import Dense
-# from keras.optimizers import RMSprop
-
 print('Importing finished')
 
 
