@@ -55,22 +55,47 @@ class PatternGenerator(object):
         y_extra = self.initial_rate * np.exp(self.decline_monthly/30.4 * X_extra)
         nn_X_extra = self.generate_X(366, 732)
 
-        ax1 = plt.subplot(1, 2, 1)
-        ax1.plot(X, self.y)
-        ax1.plot(X_extra, y_extra, linestyle='--')
+        ax1 = plt.subplot(1, 3, 1)
+        ax1.set_title(f'Curva de produção\nQ0={self.initial_rate} m3/d, declínio={self.decline_monthly} a.m.')
+        ax2 = plt.subplot(1, 3, 2)
+        ax2.set_title('Ampliação dos valores estimados')
+        ax1.plot(X, self.y, label='curva real')
+        ax1.plot(X_extra, y_extra, linestyle='--', label='curva real (previsão)')
+        ax2.plot(X_extra, y_extra, linestyle='--', label='curva real (previsão)')
         for clf, lbl in zip(classifiers, labels):
-            ax1.plot(X, clf.predict(self.X), label=lbl)
-            ax1.plot(X_extra, clf.predict(nn_X_extra), label=lbl+' (previsão)', linestyle='--')
-        ax2 = plt.subplot(1, 2, 2)
+            nn_y = clf.predict(self.X)
+            nn_y_extra = clf.predict(nn_X_extra)
+            ax1.plot(X, nn_y, label=lbl)
+            ax1.plot(X_extra, nn_y_extra, label=lbl+' (previsão)', linestyle='--')
+            ax2.plot(X_extra, nn_y_extra, label=lbl+' (previsão)', linestyle='--')
+            error_1 = nn_y - self.y
+            error_2 = nn_y_extra - y_extra
+            mse_1 = mean_squared_error(nn_y, self.y)
+            mse_2 = mean_squared_error(nn_y_extra, y_extra)
+            r2s_1 = r2_score(nn_y, self.y)
+            r2s_2 = r2_score(nn_y_extra, y_extra)
+            print('Erros do conjunto de entrada\n',
+                  f'- mse: {mse_1:.4}\n',
+                  f'- r2:{r2s_1:.4}\n',
+                  f'- média do erro: {error_1.mean():.4}\n',
+                  f'- variância do erro: {error_1.var():.4}')
+            print('Erros do conjunto de estimativas\n',
+                  f'- mse: {mse_2:.4}\n',
+                  f'- r2:{r2s_2:.4}\n',
+                  f'- média do erro: {error_2.mean():.4}\n',
+                  f'- variância do erro: {error_2.var():.4}')
+        ax3 = plt.subplot(1, 3, 3)
+        ax3.set_title('Erro de predição')
         for clf, lbl in zip(classifiers, labels):
-            ax2.scatter(self.y, clf.predict(self.X), label=lbl+' (entrada)')
-            ax2.scatter(y_extra, clf.predict(nn_X_extra), label=lbl+' (pontos extras)')
+            ax3.scatter(self.y, clf.predict(self.X), label=lbl+' (entrada)', alpha=0.3)
+            ax3.scatter(y_extra, clf.predict(nn_X_extra), label=lbl+' (pontos extras)', alpha=0.3)
             points = [min(np.hstack((self.y, y_extra)))-0.1, max(np.hstack((self.y, y_extra)))+0.1]
-            ax2.plot(points, points, linestyle='--', color='red', label='m=1')
+            ax3.plot(points, points, linestyle='--', color='red', label='m=1')
             # ax1.plot(X, clf.predict(self.X), label=lbl)
             # ax1.plot(X_extra, clf.predict(nn_X_extra), label=lbl+' (previsão)', linestyle='--')
         ax1.legend()
         ax2.legend()
+        ax3.legend()
         plt.show()
 
 
@@ -107,7 +132,7 @@ def main():
     debug = True
     pg = PatternGenerator(
         initial_rate=1,
-        decline_monthly=-0.1,
+        decline_monthly=-0.3,
         debug=debug
         )
 
