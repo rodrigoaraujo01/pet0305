@@ -44,7 +44,7 @@ class PatternGenerator(object):
 
     def better_plot_data(self, classifiers, labels):
         cm_bright = ListedColormap(['#FF0000', '#0000FF'])
-        cm = plt.cm.RdBu
+        cm = plt.cm.get_cmap('RdBu')
         X1_space = np.linspace(min(self.X1) - 1, max(self.X1) + 1, self.n_samples)
         X2_space = np.linspace(min(self.X2) - 1, max(self.X2) + 1, self.n_samples)
         xx, yy = np.meshgrid(X1_space, X2_space)
@@ -77,7 +77,7 @@ class PatternGenerator(object):
         plt.show()
     
     def square_plot(self, classifiers, labels):
-        cm = plt.cm.RdBu
+        cm = plt.cm.get_cmap('RdBu')
         X1_space = np.linspace(-5, 5, 100)
         X2_space = np.linspace(-5, 5, 100)
         xx, yy = np.meshgrid(X1_space, X2_space)
