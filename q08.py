@@ -158,4 +158,5 @@ if __name__ == '__main__':
 # https://stackoverflow.com/questions/42713276/valueerror-unknown-label-type-while-implementing-mlpclassifier
 # http://www.machinelearningtutorial.net/2017/01/28/python-scikit-simple-function-approximation/
 # https://stackoverflow.com/questions/41308662/how-to-tune-a-mlpregressor
-# 
+# Prediction error http://www.scikit-yb.org/en/latest/api/regressor/peplot.html
+# https://stackoverflow.com/questions/41069905/trouble-fitting-simple-data-with-mlpregressor
