@@ -75,7 +75,24 @@ class PatternGenerator(object):
                 test = clf.predict(X)
                 ax2.scatter(self.X1, self.X2, c=test.T[0], cmap=cm_bright, s=1)
         plt.show()
-
+    
+    def square_plot(self, classifiers, labels):
+        cm = plt.cm.RdBu
+        X1_space = np.linspace(-5, 5, 100)
+        X2_space = np.linspace(-5, 5, 100)
+        xx, yy = np.meshgrid(X1_space, X2_space)
+        for i, (clf, lbl) in enumerate(zip(classifiers, labels)):
+            ax1 = plt.subplot(1, len(classifiers), i+1)
+            if hasattr(clf, "decision_function"):
+                Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+            elif hasattr(clf, 'predict'):
+                Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+            else:
+                Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+            Z = Z.reshape(xx.shape)
+            ax1.imshow(Z, cmap=cm, alpha=.8)
+            ax1.set_title(lbl)
+        plt.show()
 
 class NeuralNetwork(object):
     def __init__(self, X, y, hidden_layer_sizes=(10,), debug=False):
@@ -177,7 +194,8 @@ def main():
         print('DLN trained')
         print(dln.accuracy())
 
-    pg.better_plot_data([nn0.clf, svm.clf, dln.model],['NN', 'SVM','DLN'])
+    pg.square_plot([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
+    # pg.better_plot_data([nn0.clf, svm.clf, dln.model],['NN', 'SVM','DLN'])
     # pg.better_plot_data([nn0.clf, svm.clf],['2x2000x1', 'SVM',])
 
 if __name__ == '__main__':
