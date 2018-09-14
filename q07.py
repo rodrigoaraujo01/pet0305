@@ -9,7 +9,7 @@ import numpy as np
 print('Importing Scikit Learn')
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn import svm
 
@@ -116,7 +116,7 @@ class NeuralNetwork(object):
 
     def accuracy(self):
         y_pred = self.clf.predict(self.X_test)
-        return accuracy_score(self.y_test, y_pred)
+        return accuracy_score(self.y_test, y_pred), confusion_matrix(self.y_test, y_pred)
 
     def predict(self, X):
         return self.clf.predict(X)
@@ -136,7 +136,9 @@ class SupportVectorMachine(object):
 
     def accuracy(self):
         y_pred = self.clf.predict(self.X_test)
-        return accuracy_score(self.y_test, y_pred)
+        print(y_pred)
+        return accuracy_score(self.y_test, y_pred), confusion_matrix(self.y_test, y_pred)
+        # return accuracy_score(self.y_test, y_pred)
 
     def predict(self, X):
         return self.clf.predict(X)
@@ -165,10 +167,17 @@ class DeepLearningNetwork(object):
             )
 
     def fit(self):
-        self.history = self.model.fit(self.X_train, self.y_train, batch_size=32, epochs=4000, verbose=1)
+        self.history = self.model.fit(
+            self.X_train, 
+            self.y_train, 
+            batch_size=32, 
+            epochs=4000, 
+            verbose=0)
 
     def accuracy(self):
-        return self.model.evaluate(self.X_test, self.y_test, verbose=0)
+        y_pred = self.model.predict(self.X_test)
+        y_pred = (y_pred > 0.5)
+        return self.model.evaluate(self.X_test, self.y_test, verbose=0), confusion_matrix(self.y_test, y_pred.T[0])
 
 
 def main():
@@ -195,7 +204,7 @@ def main():
         print(dln.accuracy())
 
     pg.square_plot([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
-    # pg.better_plot_data([nn0.clf, svm.clf, dln.model],['NN', 'SVM','DLN'])
+    pg.better_plot_data([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
     # pg.better_plot_data([nn0.clf, svm.clf],['2x2000x1', 'SVM',])
 
 if __name__ == '__main__':
