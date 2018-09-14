@@ -214,4 +214,4 @@ if __name__ == '__main__':
 # References
 # https://datascience.stackexchange.com/questions/22830/deep-neural-network-using-keras-tensorflow-solves-spiral-dataset-classification
 # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
-https://en.wikipedia.org/wiki/Confusion_matrix
+# https://en.wikipedia.org/wiki/Confusion_matrix
