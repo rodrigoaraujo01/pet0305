@@ -29,7 +29,8 @@ class PatternGenerator(object):
         y = y_norm
         self.base_X = X
         self.base_y = y
-        Z = [(i,j) for i,j in zip(X, y)]
+        self.shift = 3
+        Z = [(i,j) for i,j in zip(X[:-self.shift], y[self.shift:])]
         # np.random.shuffle(Z)
         random.shuffle(Z)
         X = []
@@ -56,9 +57,10 @@ class PatternGenerator(object):
         ax1.scatter(self.X, self.y, label='curva real', alpha=0.5)
         for clf, lbl in zip(classifiers, labels):
             x_test, y_real, y_pred = clf.get_test_values()
+            shift_x_test = [i+self.shift*0.1 for i in x_test]
             ax2.plot(self.base_X, self.base_y, label='Curva original')
-            ax2.scatter(x_test, y_real, label='Saída esperada')
-            ax2.scatter(x_test, y_pred, label='Saída da rede')
+            ax2.scatter(shift_x_test, y_real, label='Saída esperada')
+            ax2.scatter(shift_x_test, y_pred, label='Saída da rede')
             ax3.plot(range(1, len(clf.net.accum_mse) + 1), clf.net.accum_mse, label='MSE')
             ax4.scatter(y_real, y_pred, alpha=0.5)
             ax4.set_xlabel('Saída esperada')
@@ -89,7 +91,7 @@ class NARXNetwork(object):
         self.net.randomize_network()
         self.net.set_halt_on_extremes(True)
         self.net.set_random_constraint(.5)
-        self.net.set_learnrate(.2)
+        self.net.set_learnrate(.1)
 
         self.net.set_all_inputs(self.X)
         self.net.set_all_targets(self.y)
@@ -97,7 +99,7 @@ class NARXNetwork(object):
         learn_end_point = int(len(self.X) * .8)
         self.net.set_learn_range(0, learn_end_point)
         self.net.set_test_range(learn_end_point + 1, len(self.X) - 1)
-        self.net.layers[1].set_activation_type('linear')
+        self.net.layers[1].set_activation_type('tanh')
 
     def fit(self):
         self.net.learn(epochs=self.epochs, show_epoch_results=True, random_testing=False)
@@ -119,7 +121,7 @@ def main():
     debug = True
     pg = PatternGenerator(n_samples=150, debug=debug)
 
-    narx = NARXNetwork(pg.X, pg.y, [10,10], 0, 3, 1000)
+    narx = NARXNetwork(pg.X, pg.y, [5,5], 0, 3, 500)
     narx.fit()
     print(narx.accuracy())
 

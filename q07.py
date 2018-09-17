@@ -44,6 +44,7 @@ class PatternGenerator(object):
 
     def better_plot_data(self, classifiers, labels):
         cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        cm_bright_2 = ListedColormap(['#F1A43A', '#0000FF'])
         cm = plt.cm.get_cmap('RdBu')
         X1_space = np.linspace(min(self.X1) - 1, max(self.X1) + 1, self.n_samples)
         X2_space = np.linspace(min(self.X2) - 1, max(self.X2) + 1, self.n_samples)
@@ -70,10 +71,10 @@ class PatternGenerator(object):
             ax2 = plt.subplot(2, len(classifiers) + 1, i + len(classifiers) + 3)
             X = np.array([(x1,x2) for (x1, x2) in zip(self.X1, self.X2)])
             if 'DLN' not in lbl:
-                ax2.scatter(self.X1, self.X2, c=clf.predict(X), cmap=cm_bright, s=1)
+                ax2.scatter(self.X1, self.X2, c=clf.predict(X), cmap=cm_bright_2, s=1)
             else:
                 test = clf.predict(X)
-                ax2.scatter(self.X1, self.X2, c=test.T[0], cmap=cm_bright, s=1)
+                ax2.scatter(self.X1, self.X2, c=test.T[0], cmap=cm_bright_2, s=1)
         plt.show()
     
     def square_plot(self, classifiers, labels):
@@ -136,7 +137,7 @@ class SupportVectorMachine(object):
 
     def accuracy(self):
         y_pred = self.clf.predict(self.X_test)
-        print(y_pred)
+        # print(y_pred)
         return accuracy_score(self.y_test, y_pred), confusion_matrix(self.y_test, y_pred)
         # return accuracy_score(self.y_test, y_pred)
 
@@ -171,7 +172,7 @@ class DeepLearningNetwork(object):
             self.X_train, 
             self.y_train, 
             batch_size=32, 
-            epochs=4000, 
+            epochs=5000, 
             verbose=0)
 
     def accuracy(self):
@@ -203,7 +204,7 @@ def main():
         print('DLN trained')
         print(dln.accuracy())
 
-    pg.square_plot([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
+    # pg.square_plot([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
     pg.better_plot_data([nn0.clf, svm.clf, dln.model],['NN', 'SVM', 'DLN'])
     # pg.better_plot_data([nn0.clf, svm.clf],['2x2000x1', 'SVM',])
 

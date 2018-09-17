@@ -6,7 +6,7 @@ from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn import svm
 # from neupy.algorithms import GradientDescent, LevenbergMarquardt
 # from neupy import plots
@@ -118,7 +118,8 @@ class NeuralNetwork(object):
 
     def accuracy(self):
         y_pred = self.clf.predict(self.X_test)
-        return accuracy_score(self.y_test, y_pred)
+        return accuracy_score(self.y_test, y_pred), confusion_matrix(self.y_test, y_pred)
+        # return accuracy_score(self.y_test, y_pred)
 
     def predict(self, X):
         return self.clf.predict(X)
@@ -145,7 +146,8 @@ class SupportVectorMachine(object):
 
     def accuracy(self):
         y_pred = self.clf.predict(self.X_test)
-        return accuracy_score(self.y_test, y_pred)
+        return accuracy_score(self.y_test, y_pred), confusion_matrix(self.y_test, y_pred)
+        # return accuracy_score(self.y_test, y_pred)
 
     def optimize(self):
         # {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}
